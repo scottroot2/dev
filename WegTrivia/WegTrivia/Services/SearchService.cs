@@ -1,8 +1,6 @@
-﻿using System.Linq;
-using System.Net.Http;
+﻿using System.Net.Http;
 using System.Threading.Tasks;
 using WegTrivia.Models;
-using WegTrivia.Models.Responses;
 using WegTrivia.Models.Responses2;
 using WegTrivia.Helpers;
 

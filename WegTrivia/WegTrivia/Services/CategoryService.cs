@@ -24,8 +24,10 @@ namespace WegTrivia.Services
 
         public async Task<Category> GetRandomCategoryAsync()
         {
-            var cats = await GetCategoriesAsync();
-            return cats.GetRandomItem();
+            //TODO: Fix this, it was bombing on long unmarshall
+            //var cats = await GetCategoriesAsync();
+            //return cats.GetRandomItem();
+            return null;
         }
     }
 }

@@ -26,7 +26,8 @@ namespace WegTrivia
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
-            services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_2_2);
+            services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_2_1);
+            //TODO: Clean this up and consolodate
             services.AddHttpClient<CategoryService>(c => 
             {
                 c.BaseAddress = new Uri("https://api.wegmans.io");
@@ -35,21 +36,25 @@ namespace WegTrivia
             {
                 s.BaseAddress = new Uri("https://api.wegmans.io");
             });
+            services.AddHttpClient<PriceService>(s =>
+            {
+                s.BaseAddress = new Uri("https://api.wegmans.io");
+            });
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
         public void Configure(IApplicationBuilder app, IHostingEnvironment env)
         {
-            if (env.IsDevelopment())
-            {
-                app.UseDeveloperExceptionPage();
-            }
-            else
-            {
-                // The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
-                app.UseHsts();
-            }
-
+            //if (env.IsDevelopment())
+            //{
+            //    app.UseDeveloperExceptionPage();
+            //}
+            //else
+            //{
+            //    // The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
+            //    app.UseHsts();
+            //}
+            app.UseDeveloperExceptionPage();
             app.UseHttpsRedirection();
             app.UseMvc();
         }

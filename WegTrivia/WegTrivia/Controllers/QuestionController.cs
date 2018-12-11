@@ -1,10 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using WegTrivia.Models;
+using Newtonsoft.Json;
 using WegTrivia.Models.Responses;
 using WegTrivia.Services;
 
@@ -15,55 +12,88 @@ namespace WegTrivia.Controllers
     public class QuestionController : ControllerBase
     {
         private readonly SearchService _searchService;
+        private readonly PriceService _priceService;
 
-        public QuestionController(SearchService searchService)
+        public QuestionController(SearchService searchService, PriceService priceService)
         {
             _searchService = searchService;
+            _priceService = priceService;
         }
 
         // GET: api/Question
         [HttpGet]
         public IEnumerable<string> Get()
         {
-            
+
             return new string[] { "value1", "value2" };
         }
 
-        // GET: api/Question/5
-        [HttpGet("{id}", Name = "Get")]
-        public string Get(int id)
-        {
-            return "value";
-        }
-
-        // POST: api/Question
         [HttpPost]
-        public async Task<ActionResult<QuestionResponse>> PostAsync([FromBody] string queryText)
+        public ContentResult Post([FromBody] dynamic dialogFlowRequest)
         {
-            if (!ModelState.IsValid)
-                return BadRequest(ModelState);
+            //TODO: Make async
+            var productCategory = dialogFlowRequest.queryResult.parameters.ProductCategory[0].Value as String; 
+            var product = _searchService.GetRandomProductFromQueryAsync(productCategory).Result;
+            string fulfillmentTextOutput = $"Great! I found {product.Name}. ";
+            string plainText = fulfillmentTextOutput;
 
-            var product = await _searchService.GetRandomProductFromQueryAsync(queryText);
-            if (product == null)
-                return NotFound("No product found.");
-
-            QuestionResponse qr = new QuestionResponse
+            if (!string.IsNullOrEmpty(product.Sku))
             {
-                ProductName = product.Name
+                try
+                {
+                    var price = _priceService.GetPrice(product.Sku.ToString()).Result;
+                    fulfillmentTextOutput += $"It looks like it is on sale too for <say-as interpret-as=\"unit\">${price}</say-as>!";
+                    plainText += $"It looks like it is on sale too for ${price}!";
+                }
+                catch (Exception)
+                {
+                    //TODO: Handle this..or eat it
+                }
+
+            }
+
+            SsmlResponse response = new SsmlResponse()
+            {
+                FulfillmentText = plainText,
+                Payload = new Models.Responses.Payload
+                {
+                    Google = new Models.Responses.Google
+                    {
+                        ExpectUserResponse = true,
+                        RichResponse = new Models.Responses.RichResponse
+                        {
+                            Items = new List<Models.Responses.Item>()
+                            {
+                                new Models.Responses.Item
+                                {
+                                    SimpleResponse = new Models.Responses.SimpleResponse
+                                    {
+                                        DisplayText="Turn on SSML",
+                                        Ssml = $"<speak>{fulfillmentTextOutput}</speak>"
+
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
             };
-            return Ok(qr);
+            return Content(JsonConvert.SerializeObject(response), "application/json");
+
+            //var r = new StreamReader("Models\\hardcoded.json");
+            //var myJson = r.ReadToEnd();
+            //return Content(myJson);
+
+            //return Content(JsonConvert.SerializeObject(new
+            //{
+            //    fulfillmentText = fulfillmentTextOutput,
+            //    ssml = "<say-as interpret-as=\"unit\">$2043.75</say-as>"
+            //}
+            //), "application/json");
+
         }
 
-        // PUT: api/Question/5
-        [HttpPut("{id}")]
-        public void Put(int id, [FromBody] string value)
-        {
-        }
 
-        // DELETE: api/ApiWithActions/5
-        [HttpDelete("{id}")]
-        public void Delete(int id)
-        {
-        }
     }
 }
+

@@ -7,8 +7,7 @@ namespace WegTrivia.Models
     public partial class Product
     {
         [JsonProperty("sku")]
-        [JsonConverter(typeof(ParseStringConverter))]
-        public long Sku { get; set; }
+        public string Sku { get; set; }
 
         [JsonProperty("name")]
         public string Name { get; set; }
